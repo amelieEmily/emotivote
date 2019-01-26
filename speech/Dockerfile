@@ -14,4 +14,4 @@ COPY . .
 RUN pip3 install -r requirements.txt
 ENV GOOGLE_APPLICATION_CREDENTIALS /usr/src/app/credentials.json
 
-CMD ["python", "speech.py"]
+CMD ["python3", "speech.py"]

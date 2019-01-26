@@ -4,6 +4,8 @@ import threading, collections, queue, os, os.path
 from google.cloud import speech
 from vad_audio import VADAudio
 from df import DialogflowClient
+import logmmse
+import numpy as np
 import requests
 
 def main():
@@ -18,50 +20,48 @@ def main():
         encoding=speech.enums.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=16000,
         language_code=language_code)
-    streaming_config = speech.types.StreamingRecognitionConfig(
-        config=config,
-        single_utterance=True)
 
     # Start audio with VAD
     vad_audio = VADAudio(aggressiveness=3)
     print("Listening (ctrl-C to exit)...")
     frames = vad_audio.vad_collector()
 
-    # Stream from microphone to CloudSpeech using VAD
-    stream = []
+    audio = b''
     
     for frame in frames:
         if frame is not None:
-            stream.append(speech.types.StreamingRecognizeRequest(audio_content=frame))
+            audio += frame
         else:
-            responses = client.streaming_recognize(streaming_config, stream)
-            for response in responses:
-                for result in response.results:
-                    alternatives = result.alternatives
-                    for alternative in alternatives:
-                        transcript = alternative.transcript
-                        print("Transcript: " + transcript)
-                        intent, entities = df_client.detect_intent(transcript)
-                        print("Intent: " + intent)
-                        if "topic" in entities:
-                            print("Topic: " + entities["topic"])
-                            try:
-                                endpoint = url + "/topic"
-                                query = dict()
-                                query["topic"] = entities["topic"]
-                                response = requests.request("POST", endpoint, json=query)
-                            except requests.exceptions.RequestException as e:
-                                logging.error(e)
-                        if "ideas" in entities:
-                            print("Ideas: " + entities["ideas"])
-                            try:
-                                endpoint = url + "/suggestions"
-                                query = dict()
-                                query["suggestion"] = entities["ideas"]
-                                response = requests.request("POST", endpoint, json=query)
-                            except requests.exceptions.RequestException as e:
-                                logging.error(e)
-            stream = []
+            # Execute noise reduction and speech enhancement for better recognition
+            numpydata = np.fromstring(audio, dtype=np.int16)
+            denoised_audio = logmmse.logmmse(numpydata, 16000, initial_noise=3)
+            audio = speech.types.RecognitionAudio(content=denoised_audio.tobytes())
+            response = client.recognize(config, audio)
+            for result in response.results:
+                # The first alternative is the most likely one for this portion.
+                transcript = result.alternatives[0].transcript
+                print("Transcript: " + transcript)
+                intent, entities = df_client.detect_intent(transcript)
+                print("Intent: " + intent)
+                if "topic" in entities:
+                    print("Topic: " + entities["topic"])
+                    try:
+                        endpoint = url + "/topic"
+                        query = dict()
+                        query["topic"] = entities["topic"]
+                        response = requests.request("POST", endpoint, json=query)
+                    except requests.exceptions.RequestException as e:
+                        logging.error(e)
+                if "ideas" in entities:
+                    print("Ideas: " + entities["ideas"])
+                    try:
+                        endpoint = url + "/suggestions"
+                        query = dict()
+                        query["suggestion"] = entities["ideas"]
+                        response = requests.request("POST", endpoint, json=query)
+                    except requests.exceptions.RequestException as e:
+                        logging.error(e)
+            audio = b''
             
 if __name__ == '__main__':
     main()
