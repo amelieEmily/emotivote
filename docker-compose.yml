@@ -1,0 +1,22 @@
+version: "3.2"
+
+services:
+  server:
+    build: ./server
+    container_name: server
+    ports:
+      - 3000:3000
+  hello_bot:
+    build: ./docker-webexteams-bot-example-master
+    container_name: hello_bot
+    ports:
+      - 5001:4040
+      - 5002:5000
+    volumes:
+      - /Users/peterith/Dropbox/Documents/Projects/supreme-palm-tree/docker-webexteams-bot-example-master/hello_bot:/workspace
+      - /Users/peterith/Dropbox/Documents/Projects/supreme-palm-tree/docker-webexteams-bot-example-master/helpers:/workspace/helpers
+      - /Users/peterith/Dropbox/Documents/Projects/supreme-palm-tree/docker-webexteams-bot-example-master/config:/opt/config
+    entrypoint: /workspace/run.sh
+    tty: true
+    environment:
+      - PYTHONPATH=/workspace/
