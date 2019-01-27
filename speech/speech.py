@@ -1,9 +1,10 @@
 import time, logging
 from datetime import datetime
 import threading, collections, queue, os, os.path
-from google.cloud import speech
+from google.cloud import speech, pubsub
 from vad_audio import VADAudio
 from df import DialogflowClient
+from sentiment import LanguageClient
 import logmmse
 import numpy as np
 import requests
@@ -13,9 +14,15 @@ def main():
     # for a list of supported languages.
     language_code = 'en-US'  # a BCP-47 language ta
     df_client = DialogflowClient()
+    lang_client = LanguageClient()
     url = "http://localhost:3000"
 
     client = speech.SpeechClient()
+    publisher = pubsub.PublisherClient()
+    topic_path = publisher.topic_path("huddle72", "topics")
+    suggest_path = publisher.topic_path("huddle72", "suggestions")
+    vote_path = publisher.topic_path("huddle72", "vote")
+    intent_life = 0
     config = speech.types.RecognitionConfig(
         encoding=speech.enums.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=16000,
@@ -42,25 +49,22 @@ def main():
                 transcript = result.alternatives[0].transcript
                 print("Transcript: " + transcript)
                 intent, entities = df_client.detect_intent(transcript)
-                print("Intent: " + intent)
-                if "topic" in entities:
-                    print("Topic: " + entities["topic"])
-                    try:
-                        endpoint = url + "/topic"
-                        query = dict()
-                        query["topic"] = entities["topic"]
-                        response = requests.request("POST", endpoint, json=query)
-                    except requests.exceptions.RequestException as e:
-                        logging.error(e)
-                if "ideas" in entities:
-                    print("Ideas: " + entities["ideas"])
-                    try:
-                        endpoint = url + "/suggestions"
-                        query = dict()
-                        query["suggestion"] = entities["ideas"]
-                        response = requests.request("POST", endpoint, json=query)
-                    except requests.exceptions.RequestException as e:
-                        logging.error(e)
+                if intent == "Default Fallback Intent" and intent_life > 0:
+                    intent_life -= 1
+                    sentiment = str(lang_client.client.analyze_sentiment(document=lang_client.request(transcript)).document_sentiment.score)
+                    print("Sentiment: " + str(sentiment))
+                    publisher.publish(vote_path, sentiment.encode('utf-8'))
+                else:
+                    print("Intent: " + intent)
+                    if "topic" in entities and len(entities["topic"]):
+                        intent_life = 0
+                        print("Topic: " + entities["topic"])
+                        publisher.publish(topic_path, entities["topic"].encode('utf-8'))
+                    if "ideas" in entities and len(entities["ideas"]):
+                        intent_life = 3
+                        print("Ideas: " + entities["ideas"])
+                        publisher.publish(suggest_path, entities["ideas"].encode('utf-8'))
+
             audio = b''
             
 if __name__ == '__main__':
