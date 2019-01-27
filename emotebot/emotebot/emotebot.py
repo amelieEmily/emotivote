@@ -69,9 +69,12 @@ def teamswebhook():
                 video_votes = data['votes']['videoVotes']
                 for speech_score in speech_votes:
                     average += float(speech_score)
+                    teams_api.messages.create(spaceRoomId, text='A speech sentiment score is: ' + str("%.2f" % round(float(speech_score),2)))
                 for video_score in video_votes:
                     average += float(video_score)
-                average /= (len(speech_votes) + len(speech_score))
+                    teams_api.messages.create(spaceRoomId, text='The video sentiment score for one person is: ' + str("%.2f" % round(float(video_score),2)))
+                average /= (len(speech_votes) + len(video_votes))
+                print('average', average)
                 percentage = average + 10
                 percentage *= 5
                 emoji = ''
@@ -79,7 +82,7 @@ def teamswebhook():
                     emoji = ':D'
                 else:
                     emoji = 'D:'
-                teams_api.messages.create(spaceRoomId, text='The sentiment score for <' + suggestion + '> is: ' + str("%.2f" % round(float(percentage),2)) + '%! ' + emoji)
+                teams_api.messages.create(spaceRoomId, text='The average sentiment score for <' + suggestion + '> is: ' + str("%.2f" % round(float(percentage),2)) + '%! ' + emoji)
             else:
                 teams_api.messages.create(spaceRoomId, text='Say what?')
     else:
