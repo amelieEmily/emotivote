@@ -7,15 +7,15 @@ services:
     ports:
       - 3000:3000
   hello_bot:
-    build: ./docker-webexteams-bot-example-master
+    build: ./webex-bot
     container_name: hello_bot
     ports:
       - 5001:4040
       - 5002:5000
     volumes:
-      - /Users/peterith/Dropbox/Documents/Projects/supreme-palm-tree/docker-webexteams-bot-example-master/hello_bot:/workspace
-      - /Users/peterith/Dropbox/Documents/Projects/supreme-palm-tree/docker-webexteams-bot-example-master/helpers:/workspace/helpers
-      - /Users/peterith/Dropbox/Documents/Projects/supreme-palm-tree/docker-webexteams-bot-example-master/config:/opt/config
+      - C:/Users/Yong Shen/Desktop/Repositories/supreme-palm-tree/webex-bot/hello_bot:/workspace
+      - C:/Users/Yong Shen/Desktop/Repositories/supreme-palm-tree/webex-bot/helpers:/workspace/helpers
+      - C:/Users/Yong Shen/Desktop/Repositories/supreme-palm-tree/webex-bot/config:/opt/config
     entrypoint: /workspace/run.sh
     tty: true
     environment:
