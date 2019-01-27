@@ -72,8 +72,13 @@ def teamswebhook():
                 average /= i
                 percentage = average + 10
                 percentage *= 5
+                emoji = ''
+                if percentage > 50:
+                    emoji = ':D'
+                else:
+                    emoji = 'D:'
                 teams_api.messages.create(spaceRoomId, text='The average score is ' + str("%.2f" % round(float(average),2)) + '!')
-                teams_api.messages.create(spaceRoomId, text='The happiness percentage is ' + str("%.2f" % round(float(percentage),2)) + '%!')
+                teams_api.messages.create(spaceRoomId, text='The happiness percentage is ' + str("%.2f" % round(float(percentage),2)) + '%! ' + emoji)
             else:
                 teams_api.messages.create(spaceRoomId, text='Say what?')
     else:
