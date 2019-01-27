@@ -29,7 +29,7 @@ def teamswebhook():
     # Only execute this section of code when a POST request is sent, as a POST indicates when a message
     # has been sent and therefore needs processing.
     if request.method == 'POST':
-        json_data = request.json
+        json_data = request.get_json()
         print("\n")
         print("WEBHOOK POST RECEIVED:")
         print(json_data)
@@ -57,16 +57,7 @@ def teamswebhook():
         else:
             teams_api.messages.create(room.id, text='Hello, ' + person.displayName + '.')
             if 'thoughts' in message.text or 'feeling' in message.text or 'think' in message.text:
-                #try:
-                    #print("getting content")
-                    #dataToPost = urllib.parse.urlencode({'topic':'IC Hack 2019'}).encode()
-                    #contents = urllib.request.urlopen('http://server:3000/topic/', data=dataToPost)
-                    #data = json.loads(contents.read().decode())
-                    #teams_api.messages.create(room.id, text='got content')
-                    #print('content:', data)
                 teams_api.messages.create(room.id, text='Here\'s how people feel about the suggestion:')
-                #except:
-                    #print('Unable to get data')
             else:
                 teams_api.messages.create(room.id, text='Say what?')
     else:
@@ -75,24 +66,24 @@ def teamswebhook():
 @flask_app.route('/topic', methods=['POST'])
 def topic():
     if request.method == 'POST':
-        data = request.form['topic']
+        data = request.json
         print("\n")
         print("TOPIC POST RECEIVED:")
         print(data)
         print("\n")
-        teams_api.messages.create(spaceRoomId, text='The topic being discussed is ' + data + '.')
+        teams_api.messages.create(spaceRoomId, text='The topic being discussed is ' + data['topic'] + '.')
     else:
         print('received none post request, not handled!')
 
 @flask_app.route('/suggestion', methods=['POST'])
 def suggestion():
     if request.method == 'POST':
-        data = request.form['suggestion']
+        data = request.json
         print("\n")
         print("SUGGESTION POST RECEIVED:")
         print(data)
         print("\n")
-        teams_api.messages.create(spaceRoomId, text='The suggestion is ' + data + '.')
+        teams_api.messages.create(spaceRoomId, text='The suggestion is ' + data['suggestion'] + '.')
     else:
         print('received none post request, not handled!')
 
