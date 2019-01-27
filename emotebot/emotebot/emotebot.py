@@ -22,6 +22,7 @@ teams_api = None
 
 peteRoomId = 'Y2lzY29zcGFyazovL3VzL1JPT00vMmEyZGIyNTAtYTFlYi0zMjYyLWFjY2UtYjgyYTk2OGQ1ZWM1'
 spaceRoomId = 'Y2lzY29zcGFyazovL3VzL1JPT00vZjg0MmFkMDAtMjE2YS0xMWU5LWI1MzQtOTliYTM4NmI4NTU2'
+suggestion = ''
 # Create a python decorator which tells Flask to execute this method when the "/teamswebhook" uri is hit
 # and the HTTP method is a "POST" request.
 @flask_app.route('/teamswebhook', methods=['POST'])
@@ -64,12 +65,13 @@ def teamswebhook():
                 data = json.loads(contents.read().decode())
                 print(data)
                 average = 0
-                i = 0
-                for score in data['votes']:
-                    teams_api.messages.create(spaceRoomId, text='One person has a score of ' + ("%.2f" % round(float(score),2)) + '!')
-                    average += float(score)
-                    i += 1
-                average /= i
+                speech_votes = data['votes']['speechVotes']
+                video_votes = data['votes']['videoVotes']
+                for speech_score in speech_votes:
+                    average += float(speech_score)
+                for video_score in video_votes:
+                    average += float(video_score)
+                average /= (len(speech_votes) + len(speech_score))
                 percentage = average + 10
                 percentage *= 5
                 emoji = ''
@@ -77,8 +79,7 @@ def teamswebhook():
                     emoji = ':D'
                 else:
                     emoji = 'D:'
-                teams_api.messages.create(spaceRoomId, text='The average score is ' + str("%.2f" % round(float(average),2)) + '!')
-                teams_api.messages.create(spaceRoomId, text='The happiness percentage is ' + str("%.2f" % round(float(percentage),2)) + '%! ' + emoji)
+                teams_api.messages.create(spaceRoomId, text='The sentiment score for <' + suggestion + '> is: ' + str("%.2f" % round(float(percentage),2)) + '%! ' + emoji)
             else:
                 teams_api.messages.create(spaceRoomId, text='Say what?')
     else:
@@ -104,7 +105,9 @@ def suggestion():
         print("SUGGESTION POST RECEIVED:")
         print(data)
         print("\n")
-        teams_api.messages.create(spaceRoomId, text='The suggestion is ' + data['suggestion'] + '.')
+        global suggestion
+        suggestion = data['suggestion']
+        teams_api.messages.create(spaceRoomId, text='A new suggestion was made: ' + suggestion + '.')
     else:
         print('received none post request, not handled!')
 
