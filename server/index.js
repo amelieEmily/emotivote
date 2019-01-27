@@ -27,7 +27,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
-  res.send('Welcome to the Emotivote server!');
+  res.json({ payload: 'Welcome to the Emotivote server!' });
 });
 
 app.get('/topic', (req, res) => {
@@ -37,9 +37,8 @@ app.get('/topic', (req, res) => {
 app.post('/topic', (req, res) => {
   const { topic } = req.body;
   currentTopic = topic;
-  let response = `Current topic being discussed: ${currentTopic}`;
-  console.log(response);
-  res.send(response);
+  console.log(`Current topic being discussed: ${currentTopic}`);
+  res.json({ topic: currentTopic });
 });
 
 app.get('/suggestions', (req, res) => {
@@ -49,21 +48,22 @@ app.get('/suggestions', (req, res) => {
 app.post('/suggestions', (req, res) => {
   const { suggestion } = req.body;
   if (suggestion) {
-    currentSuggestions = [currentSuggestions, suggestion];
+    currentSuggestions = [...currentSuggestions, suggestion];
     console.log(`Current suggestions: ${currentSuggestions}`);
-    res.send(`New suggestion created: ${suggestion}`);
+    res.json({ suggestions: currentSuggestions });
   }
-});
-
-app.post('/votes', (req, res) => {
-  let votes = req.body.votes;
-  currentVotes = [currentVotes, ...votes];
-  res.send(`New vote registered: ${votes}`);
 });
 
 app.get('/votes', (req, res) => {
   res.json({ votes: currentVotes });
 })
+
+app.post('/votes', (req, res) => {
+  let votes = req.body.votes;
+  currentVotes = [currentVotes, ...votes];
+  console.log(`Current votes: ${currentVotes}`);
+  res.json({ votes: currentVotes });
+});
 
 const port = process.env.IP || 3000;
 app.listen(port, () => {
