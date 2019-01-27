@@ -2,7 +2,7 @@
 const { PubSub } = require('@google-cloud/pubsub');
 const axios = require('axios');
 
-const url = 'http://emotebot:5002';
+const url = 'http://192.168.99.100:5002';
 
 currentTopic = 'IC Hack 2019'
 currentSuggestions = [];
@@ -35,13 +35,14 @@ const topicSub = pubsub.subscription('topics-sub');
 const suggestionSub = pubsub.subscription('suggestions-sub');
 
 const topicHandler = message => {
-  console.log(`Topic: ${message.data}:`);
+  console.log(`Topic: ${message.data}`);
   message.ack();
   postToBot('topic', message.data);
 };
 
 const suggestionHandler = message => {
-  console.log(`Suggestion: ${message.data}:`);
+  console.log(`Suggestion: ${message.data}`);
+  console.log(message.data);
   message.ack();
   postToBot('suggestion', message.data);
 };
@@ -54,12 +55,12 @@ suggestionSub.on(`message`, suggestionHandler);
 
 const postToBot = (endpoint, message) => {
   axios.post(`${url}/${endpoint}`, {
-    [endpoint]: message,
+    [endpoint]: message.toString(),
   })
   .then((response) => {
     console.log(response);
   })
   .catch((error) => {
-    console.log(error);
+    console.log(error.message);
   });
 }
