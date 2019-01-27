@@ -1,0 +1,22 @@
+version: "3.2"
+
+services:
+  server:
+    build: ./server
+    container_name: server
+    ports:
+      - 3000:3000
+  emotebot:
+    build: ./emotebot
+    container_name: emotebot
+    ports:
+      - 5001:4040
+      - 5002:5000
+    volumes:
+      - /Users/peterith/Dropbox/Documents/Projects/supreme-palm-tree/emotebot/emotebot:/workspace
+      - /Users/peterith/Dropbox/Documents/Projects/supreme-palm-tree/emotebot/helpers:/workspace/helpers
+      - /Users/peterith/Dropbox/Documents/Projects/supreme-palm-tree/emotebot/config:/opt/config
+    entrypoint: /workspace/run.sh
+    tty: true
+    environment:
+      - PYTHONPATH=/workspace/
