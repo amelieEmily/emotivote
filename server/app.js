@@ -1,7 +1,8 @@
 // Imports the Google Cloud client library
 const { PubSub } = require('@google-cloud/pubsub');
+const axios = require('axios');
 
-const url = 'http://localhost:5002';
+const url = 'http://emotebot:5002';
 
 currentTopic = 'IC Hack 2019'
 currentSuggestions = [];
@@ -45,12 +46,14 @@ const suggestionHandler = message => {
   postToBot('suggestion', message.data);
 };
 
+console.log('Server ready!');
+
 // Listen for new messages until timeout is hit
 topicSub.on(`message`, topicHandler);
 suggestionSub.on(`message`, suggestionHandler);
 
 const postToBot = (endpoint, message) => {
-  axios.post(`${url}/${endpoint}s`, {
+  axios.post(`${url}/${endpoint}`, {
     [endpoint]: message,
   })
   .then((response) => {

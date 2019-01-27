@@ -6,6 +6,6 @@ COPY . .
 
 RUN npm install
 
-EXPOSE 3000
+ENV GOOGLE_APPLICATION_CREDENTIALS /usr/src/app/credentials.json
 
 CMD ["npm", "start"]
