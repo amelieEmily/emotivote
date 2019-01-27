@@ -51,7 +51,7 @@ def main():
                 intent, entities = df_client.detect_intent(transcript)
                 if intent == "Default Fallback Intent" and intent_life > 0:
                     intent_life -= 1
-                    sentiment = str(lang_client.client.analyze_sentiment(document=lang_client.request(transcript)).document_sentiment.score)
+                    sentiment = str(10*lang_client.client.analyze_sentiment(document=lang_client.request(transcript)).document_sentiment.score)
                     print("Sentiment: " + str(sentiment))
                     publisher.publish(vote_path, sentiment.encode('utf-8'))
                 else:
