@@ -10,6 +10,7 @@ import urllib.request
 import urllib.parse
 import json
 import re
+import requests
 # local imports ----------------------------------------------------------------
 from helpers import (read_yaml_data,
                      get_ngrok_url,
@@ -55,11 +56,26 @@ def teamswebhook():
         if message.personId == me.id:
             return 'OK'
         else:
-            teams_api.messages.create(room.id, text='Hello, ' + person.displayName + '.')
+            teams_api.messages.create(spaceRoomId, text='Hello, ' + person.displayName + '.')
             if 'thoughts' in message.text or 'feeling' in message.text or 'think' in message.text:
-                teams_api.messages.create(room.id, text='Here\'s how people feel about the suggestion:')
+                teams_api.messages.create(spaceRoomId, text='Checking votes..')
+                contents = urllib.request.urlopen('http://server:3000/votes/')
+                teams_api.messages.create(spaceRoomId, text='Here\'s how people feel about the suggestion:')
+                data = json.loads(contents.read().decode())
+                print(data)
+                average = 0
+                i = 0
+                for score in data['votes']:
+                    teams_api.messages.create(spaceRoomId, text='One person has a score of ' + ("%.2f" % round(float(score),2)) + '!')
+                    average += float(score)
+                    i += 1
+                average /= i
+                percentage = average + 10
+                percentage *= 5
+                teams_api.messages.create(spaceRoomId, text='The average score is ' + str("%.2f" % round(float(average),2)) + '!')
+                teams_api.messages.create(spaceRoomId, text='The happiness percentage is ' + str("%.2f" % round(float(percentage),2)) + '%!')
             else:
-                teams_api.messages.create(room.id, text='Say what?')
+                teams_api.messages.create(spaceRoomId, text='Say what?')
     else:
         print('received none post request, not handled!')
 

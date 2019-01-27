@@ -4,6 +4,8 @@ services:
   server:
     build: ./server
     container_name: server
+    ports:
+      - 3000:3000
     volumes:
       - ./server:/usr/src/app
       - /usr/src/app/node_modules
